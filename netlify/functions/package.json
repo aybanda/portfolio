@@ -1,0 +1,9 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for portfolio website",
+  "main": "send-email.js",
+  "dependencies": {
+    "nodemailer": "^6.10.0"
+  }
+}
