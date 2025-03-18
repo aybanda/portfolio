@@ -5,11 +5,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const serviceOptions = document.querySelectorAll(".service-option");
   const header = document.querySelector(".contact-header");
 
-  // Use relative API URL to work in both development and production
+  // Determine API URL based on environment
   const API_URL =
     window.location.hostname === "localhost"
       ? "http://localhost:3000/api/quote"
-      : "/api/quote";
+      : `${window.location.origin}/api/quote`; // This will use the current domain
 
   // Add hover effects for service options
   serviceOptions.forEach((option) => {
