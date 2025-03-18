@@ -10,7 +10,13 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://aybanda.vercel.app", "https://www.aybanda.com"] // Add your domains
+        ? [
+            "https://aybanda.vercel.app",
+            "https://ajay-dev.vercel.app",
+            "https://ajay-dev-aybanda.vercel.app",
+            "https://aybanda.com",
+            "https://www.aybanda.com",
+          ]
         : "http://localhost:8000",
     methods: ["POST"],
     credentials: true,
