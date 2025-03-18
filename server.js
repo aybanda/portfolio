@@ -35,12 +35,19 @@ const transporter = nodemailer.createTransport({
   pool: true, // Use pooled connections
   maxConnections: 3, // Maximum number of simultaneous connections
   maxMessages: Infinity, // Maximum number of messages per connection
+  debug: true, // Enable debug logs
+  logger: true, // Enable logger
 });
 
 // Verify email configuration on startup
 transporter.verify(function (error, success) {
   if (error) {
     console.error("Email configuration error:", error);
+    console.error("Environment variables:", {
+      EMAIL_USER: process.env.EMAIL_USER ? "Set" : "Not set",
+      EMAIL_PASS: process.env.EMAIL_PASS ? "Set" : "Not set",
+      NODE_ENV: process.env.NODE_ENV,
+    });
   } else {
     console.log("Server is ready to send emails");
   }
@@ -48,11 +55,23 @@ transporter.verify(function (error, success) {
 
 // Quote request endpoint
 app.post("/api/quote", async (req, res) => {
+  console.log("Received quote request:", {
+    body: req.body,
+    headers: req.headers,
+    origin: req.get("origin"),
+  });
+
   try {
     const { name, email, services, message } = req.body;
 
     // Validate input
     if (!name || !email || !services || !message) {
+      console.error("Missing required fields:", {
+        name,
+        email,
+        services,
+        message,
+      });
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -89,16 +108,18 @@ app.post("/api/quote", async (req, res) => {
       `,
     };
 
-    // Send emails asynchronously with retries
+    // Send emails asynchronously with retries and logging
     const sendEmailWithRetry = async (options, retries = 3) => {
       for (let i = 0; i < retries; i++) {
         try {
-          await transporter.sendMail(options);
+          console.log(`Attempt ${i + 1} to send email to ${options.to}`);
+          const info = await transporter.sendMail(options);
+          console.log("Email sent successfully:", info);
           return true;
         } catch (error) {
           console.error(`Email attempt ${i + 1} failed:`, error);
           if (i === retries - 1) throw error;
-          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
         }
       }
     };
@@ -109,6 +130,11 @@ app.post("/api/quote", async (req, res) => {
       sendEmailWithRetry(autoReplyOptions),
     ]).catch((error) => {
       console.error("Error sending emails:", error);
+      console.error("Email configuration:", {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS ? "Set" : "Not set",
+        service: "gmail",
+      });
     });
   } catch (error) {
     console.error("Error processing quote request:", error);
